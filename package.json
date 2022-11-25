@@ -1,0 +1,11 @@
+{
+  "name": "learn-react-spectrum",
+  "version": "1.0.0",
+  "repository": "git@github.com:bhongy/learn-react-spectrum.git",
+  "author": "Thanik Bhongbhibhat <email@thanik.me>",
+  "license": "MIT",
+  "private": true,
+  "devDependencies": {
+    "typescript": "^4.9.3"
+  }
+}
