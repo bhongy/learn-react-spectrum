@@ -108,8 +108,8 @@ interface ItemsByKey<T> {
   item(key: React.Key): T | undefined;
 }
 
-// createItemsByKey builds functions that allow constant time for querying
-// the item or index for a given key.
+// createItemsByKey builds functions that allow constant-time lookup
+// for an item or its index by a given key.
 //
 // The underlying data structure (Map) is lazily instantiated only
 // at the first query to ensure we don't do the work unless we have to.
@@ -122,7 +122,7 @@ function createItemsByKey<T>(
     if (!entries) {
       entries = items.reduce(
         (m, item, index) => m.set(getKey(item), {item, index}),
-        new Map()
+        new Map<React.Key, {item: T; index: number}>()
       );
     }
     return entries.get(key);
