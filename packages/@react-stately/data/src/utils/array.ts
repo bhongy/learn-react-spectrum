@@ -5,6 +5,8 @@ export function insert<T>(original: T[], index: number, ...values: T[]): T[] {
     return original;
   }
 
+  // ? should we throw for invalid index
+
   // guard against index to insert is less than 0
   index = Math.max(index, 0);
   // guard against index to insert being too large
@@ -37,6 +39,7 @@ export function move<T>(original: T[], index: number, indices: number[]): T[] {
   const n = original.length;
 
   indices = [...indices]
+    // ? should we throw for invalid indices
     // guard against invalid indices such as -1 i.e. mapping over findIndex
     // as well as anything that is out of range.
     .filter((i) => i >= 0 && i < n)

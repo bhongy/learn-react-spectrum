@@ -1,6 +1,6 @@
+import {Selection} from '@react-types/shared';
 import {useMemo, useState} from 'react';
 import * as arrayUtils from './utils/array';
-import {Selection} from '@react-types/shared';
 
 export interface ListOptions<T> {
   initialItems?: T[];
@@ -77,6 +77,16 @@ export function useListData<T>(options: ListOptions<T>): ListData<T> {
     filterText: initialFilterText,
   });
 
+  // TODO: make it lazy
+  const itemsByKey = useMemo(
+    () =>
+      state.items.reduce(
+        (m, item, index) => m.set(getKey(item), [index, item]),
+        new Map<React.Key, [number, T]>()
+      ),
+    [getKey, state.items]
+  );
+
   const filteredItems = useMemo(
     () =>
       filter
@@ -85,7 +95,7 @@ export function useListData<T>(options: ListOptions<T>): ListData<T> {
     [filter, state.items, state.filterText]
   );
 
-  const actions = createListActions({getKey}, setState);
+  const actions = createListActions({getKey, itemsByKey}, setState);
 
   return {
     ...state,
@@ -98,20 +108,19 @@ export function useListData<T>(options: ListOptions<T>): ListData<T> {
   };
 }
 
-interface CreateListActionsOption<T> {
+interface CreateListActionsProps<T> {
   getKey: (item: T) => React.Key;
+  itemsByKey: Map<React.Key, [number, T]>;
   // TODO: cursor?
 }
 
 function createListActions<T>(
-  options: CreateListActionsOption<T>,
+  props: CreateListActionsProps<T>,
   dispatch: React.Dispatch<React.SetStateAction<ListState<T>>>
 ): ListActions<T> {
-  const {getKey} = options;
+  const {getKey, itemsByKey} = props;
 
   // TODO:
-  // - create lookup table: key -> [index, item] (optimize findIndex)
-  //   (good for large list)
   // - (dev) warn found duplicate keys
   // - (dev) warn found "" as key
   // - (dev) warn key is undefined
@@ -135,8 +144,9 @@ function createListActions<T>(
         if (state.items.length === 0) {
           return insert(state, 0, ...values);
         }
-        const i = state.items.findIndex((item) => getKey(item) === key);
-        if (i === -1) {
+
+        const [i] = itemsByKey.get(key) ?? [];
+        if (i == null) {
           return state;
         }
         return insert(state, i, ...values);
@@ -148,8 +158,9 @@ function createListActions<T>(
         if (state.items.length === 0) {
           return insert(state, 0, ...values);
         }
-        const i = state.items.findIndex((item) => getKey?.(item) === key);
-        if (i === -1) {
+
+        const [i] = itemsByKey.get(key) ?? [];
+        if (i == null) {
           return state;
         }
         return insert(state, i + 1, ...values);
@@ -205,8 +216,8 @@ function createListActions<T>(
 
     move(key, toIndex) {
       dispatch((state) => {
-        const i = state.items.findIndex((item) => getKey(item) === key);
-        if (i === -1) {
+        const [i] = itemsByKey.get(key) ?? [];
+        if (i == null) {
           return state;
         }
 
@@ -218,8 +229,8 @@ function createListActions<T>(
 
     moveBefore(key, keys) {
       dispatch((state) => {
-        const i = state.items.findIndex((item) => getKey(item) === key);
-        if (i === -1) {
+        const [i] = itemsByKey.get(key) ?? [];
+        if (i == null) {
           return state;
         }
 
@@ -233,8 +244,8 @@ function createListActions<T>(
 
     moveAfter(key, keys) {
       dispatch((state) => {
-        const i = state.items.findIndex((item) => getKey(item) === key);
-        if (i === -1) {
+        const [i] = itemsByKey.get(key) ?? [];
+        if (i == null) {
           return state;
         }
 
@@ -248,8 +259,8 @@ function createListActions<T>(
 
     update(key, newValue) {
       dispatch((state) => {
-        const i = state.items.findIndex((item) => getKey(item) === key);
-        if (i === -1) {
+        const [i] = itemsByKey.get(key) ?? [];
+        if (i == null) {
           return state;
         }
 
