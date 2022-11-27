@@ -77,13 +77,8 @@ export function useListData<T>(options: ListOptions<T>): ListData<T> {
     filterText: initialFilterText,
   });
 
-  // TODO: make it lazy
   const itemsByKey = useMemo(
-    () =>
-      state.items.reduce(
-        (m, item, index) => m.set(getKey(item), [index, item]),
-        new Map<React.Key, [number, T]>()
-      ),
+    () => createItemsByKey(state.items, getKey),
     [getKey, state.items]
   );
 
@@ -103,14 +98,40 @@ export function useListData<T>(options: ListOptions<T>): ListData<T> {
     ...actions,
 
     getItem(key) {
-      return state.items.find((item) => getKey(item) === key);
+      return itemsByKey.item(key);
     },
+  };
+}
+
+interface ItemsByKey<T> {
+  index(key: React.Key): number | undefined;
+  item(key: React.Key): T | undefined;
+}
+
+function createItemsByKey<T>(
+  items: T[],
+  getKey: (item: T) => React.Key
+): ItemsByKey<T> {
+  let entries: Map<React.Key, {item: T; index: number}>;
+  const getEntry = (key: React.Key) => {
+    if (!entries) {
+      entries = items.reduce(
+        (m, item, index) => m.set(getKey(item), {item, index}),
+        new Map()
+      );
+    }
+    return entries.get(key);
+  };
+
+  return {
+    index: (k) => getEntry(k)?.index,
+    item: (k) => getEntry(k)?.item,
   };
 }
 
 interface CreateListActionsProps<T> {
   getKey: (item: T) => React.Key;
-  itemsByKey: Map<React.Key, [number, T]>;
+  itemsByKey: ItemsByKey<T>;
   // TODO: cursor?
 }
 
@@ -145,7 +166,7 @@ function createListActions<T>(
           return insert(state, 0, ...values);
         }
 
-        const [i] = itemsByKey.get(key) ?? [];
+        const i = itemsByKey.index(key);
         if (i == null) {
           return state;
         }
@@ -159,7 +180,7 @@ function createListActions<T>(
           return insert(state, 0, ...values);
         }
 
-        const [i] = itemsByKey.get(key) ?? [];
+        const i = itemsByKey.index(key);
         if (i == null) {
           return state;
         }
@@ -216,7 +237,7 @@ function createListActions<T>(
 
     move(key, toIndex) {
       dispatch((state) => {
-        const [i] = itemsByKey.get(key) ?? [];
+        const i = itemsByKey.index(key);
         if (i == null) {
           return state;
         }
@@ -229,7 +250,7 @@ function createListActions<T>(
 
     moveBefore(key, keys) {
       dispatch((state) => {
-        const [i] = itemsByKey.get(key) ?? [];
+        const i = itemsByKey.index(key);
         if (i == null) {
           return state;
         }
@@ -244,7 +265,7 @@ function createListActions<T>(
 
     moveAfter(key, keys) {
       dispatch((state) => {
-        const [i] = itemsByKey.get(key) ?? [];
+        const i = itemsByKey.index(key);
         if (i == null) {
           return state;
         }
@@ -259,7 +280,7 @@ function createListActions<T>(
 
     update(key, newValue) {
       dispatch((state) => {
-        const [i] = itemsByKey.get(key) ?? [];
+        const i = itemsByKey.index(key);
         if (i == null) {
           return state;
         }

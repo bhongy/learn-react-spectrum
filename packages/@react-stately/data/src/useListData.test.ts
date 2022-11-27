@@ -236,6 +236,8 @@ describe('useListData', () => {
     expect(result.current.items[4]).toEqual({name: 'Danni'});
   });
 
+  // ...
+
   describe('remove', () => {
     it('should remove an item', () => {
       const {result} = renderHook(() =>
