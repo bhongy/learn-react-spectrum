@@ -108,6 +108,11 @@ interface ItemsByKey<T> {
   item(key: React.Key): T | undefined;
 }
 
+// createItemsByKey builds functions that allow constant time for querying
+// the item or index for a given key.
+//
+// The underlying data structure (Map) is lazily instantiated only
+// at the first query to ensure we don't do the work unless we have to.
 function createItemsByKey<T>(
   items: T[],
   getKey: (item: T) => React.Key
@@ -213,8 +218,9 @@ function createListActions<T>(
         }
 
         // if (cursor == null && items.length === 0) {
-        //   selection = new Set();
-        // }
+        if (items.length === 0) {
+          selection = new Set();
+        }
 
         return {...state, items, selectedKeys: selection};
       });
