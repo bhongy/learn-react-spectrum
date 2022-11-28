@@ -146,12 +146,6 @@ function createListActions<T>(
 ): ListActions<T> {
   const {getKey, itemsByKey} = props;
 
-  // TODO:
-  // - (dev) warn found duplicate keys
-  // - (dev) warn found "" as key
-  // - (dev) warn key is undefined
-  // ^ memo these on unfiltered items
-
   return {
     setSelectedKeys(selectedKeys) {
       dispatch((state) => ({...state, selectedKeys}));
@@ -316,3 +310,35 @@ function move<T>(
   const items = arrayUtils.move(state.items, toIndex, indices);
   return {...state, items};
 }
+
+/*
+
+WIP
+
+function useItemsValidation<T>(items: T[], getKey: (item: T) => React.Key) {
+  useEffect(() => {
+    if (process.env.NODE_ENV !== 'production') {
+      const seenKeys = new Set<React.Key>();
+      for (const [i, item] of items.entries()) {
+        const k = getKey(item);
+
+        if (typeof k !== 'string') {
+          throw new TypeError(
+            `item's key must be a string but got ${typeof k} for item: ${JSON.stringify(
+              item
+            )} at index: ${i}`
+          );
+        }
+
+        if (k === '') {
+          console.warn('getKey should not return an empty string.');
+        } else if (seenKeys.has(k)) {
+          console.warn(`Duplicate key (${k}) found.`);
+        } else {
+          seenKeys.add(k);
+        }
+      }
+    }
+  }, [items, getKey]);
+}
+*/
