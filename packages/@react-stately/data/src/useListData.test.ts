@@ -1,4 +1,4 @@
-import {act, render, renderHook} from '@testing-library/react';
+import {act, renderHook} from '@testing-library/react';
 import {useListData} from './useListData';
 
 interface TestItem {
@@ -411,6 +411,114 @@ describe('useListData', () => {
     });
   });
 
+  // we don't need to test edge cases expansively
+  // since we delegate to arrayUtils.move.
+  describe('moveBefore', () => {
+    beforeEach(() => {
+      initialItems = [
+        {name: 'One'},
+        {name: 'Two'},
+        {name: 'Three'},
+        {name: 'Four'},
+        {name: 'Five'},
+        {name: 'Six'},
+      ];
+    });
+
+    it('should move an item before the item with key', () => {
+      const {result} = renderHook(() => useListData({initialItems, getKey}));
+      const initialResult = result.current;
+
+      act(() => {
+        result.current.moveBefore('Three', ['One']);
+      });
+
+      expect(result.current.items).not.toBe(initialResult.items);
+      expect(result.current.items).toHaveLength(6);
+      expect(result.current.items).toEqual([
+        initialItems[1],
+        initialItems[0],
+        initialItems[2],
+        initialItems[3],
+        initialItems[4],
+        initialItems[5],
+      ]);
+    });
+
+    it('should move multiple items before the item with key', () => {
+      const {result} = renderHook(() => useListData({initialItems, getKey}));
+      const initialResult = result.current;
+
+      act(() => {
+        result.current.moveBefore('Three', ['One', 'Five']);
+      });
+
+      expect(result.current.items).not.toBe(initialResult.items);
+      expect(result.current.items).toHaveLength(6);
+      expect(result.current.items).toEqual([
+        initialItems[1],
+        initialItems[0],
+        initialItems[4],
+        initialItems[2],
+        initialItems[3],
+        initialItems[5],
+      ]);
+    });
+  });
+
+  describe('moveAfter', () => {
+    beforeEach(() => {
+      initialItems = [
+        {name: 'One'},
+        {name: 'Two'},
+        {name: 'Three'},
+        {name: 'Four'},
+        {name: 'Five'},
+        {name: 'Six'},
+      ];
+    });
+
+    it('should move an item before the item with key', () => {
+      const {result} = renderHook(() => useListData({initialItems, getKey}));
+      const initialResult = result.current;
+
+      act(() => {
+        result.current.moveAfter('Three', ['One']);
+      });
+
+      expect(result.current.items).not.toBe(initialResult.items);
+      expect(result.current.items).toHaveLength(6);
+      expect(result.current.items).toEqual([
+        initialItems[1],
+        initialItems[2],
+        initialItems[0],
+        initialItems[3],
+        initialItems[4],
+        initialItems[5],
+      ]);
+    });
+
+    it('should move multiple items before the item with key', () => {
+      const {result} = renderHook(() => useListData({initialItems, getKey}));
+      const initialResult = result.current;
+
+      act(() => {
+        result.current.moveAfter('Three', ['One', 'Five']);
+      });
+
+      expect(result.current.items).not.toBe(initialResult.items);
+      expect(result.current.items).toHaveLength(6);
+      expect(result.current.items).toEqual([
+        initialItems[1],
+        initialItems[2],
+        initialItems[0],
+        initialItems[4],
+        initialItems[3],
+        initialItems[5],
+      ]);
+    });
+  });
+
   describe('update', () => {
     it('should update an item', () => {
       const {result} = renderHook(() => useListData({initialItems, getKey}));
@@ -429,7 +537,16 @@ describe('useListData', () => {
     });
   });
 
-  it('should return filtered items based on filter text', () => {
+  it('should filter items when initialFilterText is provided', () => {
+    const {result} = renderHook(() =>
+      useListData({initialItems, getKey, filter, initialFilterText: 'Sa'})
+    );
+
+    expect(result.current.items).toHaveLength(1);
+    expect(result.current.items[0]).toEqual({name: 'Sam'});
+  });
+
+  it('should update filtered items when filter text is set', () => {
     const {result} = renderHook(() =>
       useListData({initialItems, getKey, filter})
     );
@@ -443,14 +560,5 @@ describe('useListData', () => {
 
     expect(result.current.items).toHaveLength(1);
     expect(result.current.items).toEqual([{name: 'David'}]);
-  });
-
-  it('should filter items when initialFilterText is provided', () => {
-    const {result} = renderHook(() =>
-      useListData({initialItems, filter, initialFilterText: 'Sa'})
-    );
-
-    expect(result.current.items).toHaveLength(1);
-    expect(result.current.items[0]).toEqual({name: 'Sam'});
   });
 });
