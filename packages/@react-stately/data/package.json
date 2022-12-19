@@ -1,3 +1,6 @@
 {
-  "name": "@react-stately/data"
+  "name": "@react-stately/data",
+  "dependencies": {
+    "@react-types/shared": "latest"
+  }
 }
